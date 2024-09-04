@@ -362,6 +362,7 @@ impl Game {
                 new_board[x][self.board.len() - 1 - y].y = (self.board[x].len() - 1 - y) as u8;
             }
         }
+        self.board = new_board;
     }
     fn diag_flip(&mut self) {
         let mut new_board: [[Piece; 4]; 4] = Self::default().board;
@@ -372,6 +373,7 @@ impl Game {
                 new_board[x][y].y = y as u8;
             }
         }
+        self.board = new_board;
     }
 
     fn summon(&mut self) {
