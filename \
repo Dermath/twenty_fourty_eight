@@ -1,0 +1,222 @@
+use iced::executor;
+use iced::keyboard as k;
+use iced::widget::{button, column, container, text};
+use iced::{Application, Command, Element, Length, Settings, Theme};
+
+fn main() -> iced::Result {
+    Game::run(Settings::default())
+}
+
+impl Application for Game {
+    type Executor = executor::Default;
+    type Theme = Theme;
+    type Message = Message;
+    type Flags = ();
+
+    fn new(_flags: ()) -> (Self, Command<Message>) {
+        (Self::default(), Command::none())
+    }
+
+    fn title(&self) -> String {
+        String::from("2048")
+    }
+
+    fn update(&mut self, message: Message) -> Command<Message> {
+        match message {
+            Message::Up => self.up(),
+            Message::Down => self.down(),
+            Message::Left => self.left(),
+            Message::Right => self.right(),
+            _ => (),
+        }
+
+        Command::none()
+    }
+
+    fn view(&self) -> Element<Message> {
+        let board = column![
+            button("j").on_press(Message::Up),
+            text(self.score).size(50),
+            button("k").on_press(Message::Down),
+        ];
+
+        container(board)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(20)
+            .into()
+    }
+
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        return k::on_key_press(input).into();
+    }
+}
+
+fn input(key: k::Key, _module: k::Modifiers) -> Option<Message> {
+    let char = match key {
+        // k::Key::Character(inner) => inner,
+        k::Key::Named(inner) => inner,
+        _ => return None,
+    };
+
+    return Some(match char {
+        k::key::Named::ArrowUp => Message::Up,
+        k::key::Named::ArrowDown => Message::Down,
+        k::key::Named::ArrowLeft => Message::Left,
+        k::key::Named::ArrowRight => Message::Right,
+        _ => Message::None,
+    });
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Message {
+    Up,
+    Down,
+    Left,
+    Right,
+    None,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Dir {
+    Forward,
+    Backward,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Piece {
+    scale: u8,
+    x: u8,
+    y: u8,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Time {
+    hours: u8,
+    minutes: u8,
+    seconds: u8,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Game {
+    board: [[Piece; 4]; 4], // [x][y]
+    score: u32,
+    moves: u32,
+    time: Time,
+}
+
+impl Piece {
+    fn as_number(&self) -> u32 {
+        return 2 ^ (self.scale as u32);
+    }
+}
+
+impl Time {
+    fn tick(&mut self) {
+        self.seconds += 1;
+        if self.seconds >= 60 {
+            self.minutes += 1;
+        }
+        if self.minutes >= 60 {
+            self.hours += 1;
+        }
+    }
+}
+
+impl Game {
+    fn default() -> Self {
+        Self {
+            board: [[Piece {
+                scale: 0,
+                x: 0,
+                y: 0,
+            }; 4]; 4],
+            score: 0,
+            moves: 0,
+            time: Time {
+                seconds: 0,
+                minutes: 0,
+                hours: 0,
+            },
+        }
+    }
+    fn flip(&mut self) {
+        let mut new_board: [[Piece; 4]; 4] = Self::default().board;
+        for i in 0..self.board.len() {
+            for p in 0..self.board[i].len() {
+                new_board[p][i] = self.board[i][p];
+            }
+        }
+        self.board = new_board;
+    }
+
+    fn summon(&mut self) {
+        // todo!();
+    }
+
+    fn compressible(&self, row: usize) -> bool {
+        // todo!();
+        true
+    }
+
+    fn compress(&mut self, row: usize, direction: Dir) {
+        // todo!();
+    }
+    fn up(&mut self) {
+        let mut has_shifted = false;
+        for c in 0..self.board.len() {
+            if self.compressible(c) {
+                self.compress(c, Dir::Forward);
+                has_shifted = true;
+            }
+        }
+        if has_shifted {
+            self.summon();
+        }
+        eprintln!("up")
+    }
+    fn down(&mut self) {
+        let mut has_shifted = false;
+        for c in 0..self.board.len() {
+            if self.compressible(c) {
+                self.compress(c);
+                has_shifted = true;
+            }
+        }
+        if has_shifted {
+            self.summon();
+        }
+
+        eprintln!("down")
+    }
+    fn left(&mut self) {
+        self.flip();
+        let mut has_shifted = false;
+        for c in 0..self.board.len() {
+            if self.compressible(c) {
+                self.compress(c, Dir::Forward);
+                has_shifted = true;
+            }
+        }
+        if has_shifted {
+            self.summon();
+        }
+        self.flip();
+        eprintln!("left")
+    }
+    fn right(&mut self) {
+        self.flip();
+        let mut has_shifted = false;
+        for c in 0..self.board.len() {
+            if self.compressible(c) {
+                self.compress(c);
+                has_shifted = true;
+            }
+        }
+        if has_shifted {
+            self.summon();
+        }
+        self.flip();
+        eprintln!("right")
+    }
+}
