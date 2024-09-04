@@ -7,28 +7,12 @@ use iced::keyboard as k;
 use iced::theme::{Custom, Palette};
 use iced::widget::{button, column, container, row, text::Text};
 use iced::Color;
+use iced::Pixels;
 use iced::{Application, Command, Element, Length, Settings, Theme};
 use rand::thread_rng;
 use rand::Rng;
 
-const RED: Color = Color {
-    r: 0.8,
-    g: 0.0,
-    b: 0.0,
-    a: 0.0,
-};
-const BLACK: Color = Color {
-    r: 0.0,
-    g: 0.0,
-    b: 0.0,
-    a: 0.0,
-};
-const WHITE: Color = Color {
-    r: 1.0,
-    g: 1.0,
-    b: 1.0,
-    a: 1.0,
-};
+const FONT_SIZE: f32 = 70.0;
 
 const BUTTONWIDTH: u16 = 200;
 const BUTTONHEIGHT: u16 = 200;
@@ -46,6 +30,19 @@ fn _interesting(game: &Game) {
             }
         }
     }
+}
+
+fn piece_button(piece: Piece) -> button::Button<'static, Message> {
+    button(
+        Text::new(piece.as_string())
+            .horizontal_alignment(Horizontal::Center)
+            .vertical_alignment(Vertical::Center)
+            .size(Pixels(FONT_SIZE)),
+    )
+    .width(BUTTONHEIGHT)
+    .height(BUTTONWIDTH)
+    .padding(BUTTONPADDING)
+    .on_press(Message::None)
 }
 
 impl Application for Game {
@@ -93,156 +90,28 @@ impl Application for Game {
     fn view(&self) -> Element<Message> {
         let board = row![
             column![
-                button(
-                    Text::new(self.board[0][0].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .height(BUTTONWIDTH)
-                .padding(BUTTONPADDING)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[0][1].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .height(BUTTONWIDTH)
-                .padding(BUTTONPADDING)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[0][2].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[0][3].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
+                piece_button(self.board[0][0]),
+                piece_button(self.board[0][1]),
+                piece_button(self.board[0][2]),
+                piece_button(self.board[0][3]),
             ],
             column![
-                button(
-                    Text::new(self.board[1][0].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[1][1].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[1][2].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[1][3].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
+                piece_button(self.board[1][0]),
+                piece_button(self.board[1][1]),
+                piece_button(self.board[1][2]),
+                piece_button(self.board[1][3]),
             ],
             column![
-                button(
-                    Text::new(self.board[2][0].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[2][1].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[2][2].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[2][3].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
+                piece_button(self.board[2][0]),
+                piece_button(self.board[2][1]),
+                piece_button(self.board[2][2]),
+                piece_button(self.board[2][3]),
             ],
             column![
-                button(
-                    Text::new(self.board[3][0].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[3][1].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[3][2].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
-                button(
-                    Text::new(self.board[3][3].as_string())
-                        .horizontal_alignment(Horizontal::Center)
-                        .vertical_alignment(Vertical::Center)
-                )
-                .width(BUTTONHEIGHT)
-                .padding(BUTTONPADDING)
-                .height(BUTTONWIDTH)
-                .on_press(Message::None),
+                piece_button(self.board[3][0]),
+                piece_button(self.board[3][1]),
+                piece_button(self.board[3][2]),
+                piece_button(self.board[3][3]),
             ]
         ];
 
@@ -391,54 +260,44 @@ impl Game {
         };
     }
 
-    fn compressible(&self, c: usize) -> bool {
-        for i in self.board[c] {
-            if i.y < 3 && i.scale > 0 && self.board[c][i.y as usize + 1].scale == 0 {
-                eprintln!("scale: {}", i.scale);
-                eprintln!("x: {}", i.x);
-                eprintln!("y: {}", i.y);
-                eprintln!("empty space");
-                return true;
-            //            } else if i.y < 0 && self.board[c][(i.y - 1) as usize].scale == i.scale {
-            //              return true;
-            } else if i.y < 3 && i.scale > 0 && self.board[c][i.y as usize + 1].scale == i.scale {
-                eprintln!("scale: {}", i.scale);
-                eprintln!("x: {}", i.x);
-                eprintln!("y: {}", i.y);
-                eprintln!("smush");
+    fn compressible(&self, x: usize) -> bool {
+        for y in self.board[x] {
+            if (y.y > 0 && y.scale > 0)
+                && (self.board[x][y.y as usize - 1].scale == 0
+                    || self.board[x][y.y as usize - 1].scale == y.scale)
+            {
                 return true;
             }
         }
         return false;
     }
 
-    fn compress(&mut self, c: usize) {
-        for i in 0..self.board[c].len() {
-            if i < 3 && self.board[c][i + 1].scale == 0 {
-                self.board[c][i + 1] = self.board[c][i];
-                self.board[c][i + 1].x = c as u8;
-                self.board[c][i + 1].y = i as u8 + 1;
-                self.board[c][i] = Piece {
+    fn compress(&mut self, x: usize) {
+        for y in 0..self.board[x].len() {
+            if y > 0 && self.board[x][y - 1].scale == 0 {
+                self.board[x][y - 1] = self.board[x][y];
+                self.board[x][y - 1].x = x as u8;
+                self.board[x][y - 1].y = y as u8 - 1;
+                self.board[x][y] = Piece {
                     scale: 0,
-                    x: c as u8,
-                    y: i as u8,
+                    x: x as u8,
+                    y: y as u8,
                 };
-            } else if i < 3 && self.board[c][i + 1].scale == self.board[c][i].scale {
-                self.board[c][i + 1].scale += 1;
-                self.board[c][i] = Piece {
+            } else if y > 0 && self.board[x][y - 1].scale == self.board[x][y].scale {
+                self.board[x][y - 1].scale += 1;
+                self.board[x][y] = Piece {
                     scale: 0,
-                    x: c as u8,
-                    y: i as u8,
+                    x: x as u8,
+                    y: y as u8,
                 };
-                self.score += self.board[c][i].as_number();
+                self.score += self.board[x][y].as_number();
             }
         }
-        if self.compressible(c) {
-            self.compress(c);
+        if self.compressible(x) {
+            self.compress(x);
         }
     }
     fn up(&mut self) {
-        self.vert_flip();
         let mut has_shifted = false;
         for x in 0..self.board.len() {
             if self.compressible(x) {
@@ -446,7 +305,6 @@ impl Game {
                 has_shifted = true;
             }
         }
-        self.vert_flip();
 
         if has_shifted {
             self.summon();
@@ -454,6 +312,7 @@ impl Game {
         eprintln!("up")
     }
     fn down(&mut self) {
+        self.vert_flip();
         let mut has_shifted = false;
         for x in 0..self.board.len() {
             if self.compressible(x) {
@@ -461,6 +320,7 @@ impl Game {
                 has_shifted = true;
             }
         }
+        self.vert_flip();
         if has_shifted {
             self.summon();
         }
@@ -469,7 +329,6 @@ impl Game {
     }
     fn left(&mut self) {
         self.diag_flip();
-        self.vert_flip();
         let mut has_shifted = false;
         for x in 0..self.board.len() {
             if self.compressible(x) {
@@ -477,7 +336,6 @@ impl Game {
                 has_shifted = true;
             }
         }
-        self.vert_flip();
         self.diag_flip();
 
         if has_shifted {
@@ -487,6 +345,7 @@ impl Game {
     }
     fn right(&mut self) {
         self.diag_flip();
+        self.vert_flip();
         let mut has_shifted = false;
         for x in 0..self.board.len() {
             if self.compressible(x) {
@@ -494,6 +353,7 @@ impl Game {
                 has_shifted = true;
             }
         }
+        self.vert_flip();
         self.diag_flip();
 
         if has_shifted {
