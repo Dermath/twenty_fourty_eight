@@ -1,7 +1,10 @@
+use core::num;
+
 use iced::alignment::Horizontal;
 use iced::alignment::Vertical;
 use iced::keyboard as k;
 use iced::time;
+use iced::widget::pane_grid::Direction;
 use iced::widget::{button, column, container, row, text};
 use iced::{Element, Length, Pixels, Theme};
 use rand::thread_rng;
@@ -9,18 +12,32 @@ use rand::Rng;
 
 const FONT_SIZE: f32 = 70.0;
 
-const BUTTON_WIDTH: u16 = 200;
-const BUTTON_HEIGHT: u16 = 200;
-const BUTTON_PADDING: u16 = 5;
+const BUTTON_WIDTH: f32 = 200.0;
+const BUTTON_HEIGHT: f32 = 200.0;
+const BUTTON_PADDING: f32 = 5.0;
 const UI_PADDING: u16 = 20;
 
 const WIN_SCALE: f32 = 11.0;
 
 fn main() -> iced::Result {
+    let icon = match iced::window::icon::from_file(
+        "/home/dermot/Desktop/Programing/Rust/twenty_fourty_eight/src/2048.png",
+    ) {
+        Ok(inner) => inner,
+        Err(inner) => panic!(
+            "the window icon appears to be missing with error code: {}",
+            inner
+        ),
+    };
+    let window_settings = iced::window::Settings {
+        icon: Some(icon),
+        ..iced::window::Settings::default()
+    };
     iced::application("2048", Game::update, Game::view)
         .subscription(Game::subscription)
         .theme(|_| Theme::SolarizedDark)
         .antialiasing(true)
+        .window(window_settings)
         .run()
 }
 
@@ -40,6 +57,10 @@ fn piece_button(piece: Piece) -> button::Button<'static, Message> {
         r = 1.0;
     }
     let b = 1.0 - r;
+    let press_action = match piece.scale {
+        0 => Message::Upgrade(piece),
+        _ => Message::None,
+    };
     return button(
         text(piece.as_string())
             .align_x(Horizontal::Center)
@@ -49,7 +70,7 @@ fn piece_button(piece: Piece) -> button::Button<'static, Message> {
     )
     .width(BUTTON_HEIGHT)
     .height(BUTTON_WIDTH)
-    .on_press(Message::None);
+    .on_press(press_action);
 }
 
 fn ui_button(button_text: String, message: Message) -> button::Button<'static, Message> {
@@ -57,24 +78,35 @@ fn ui_button(button_text: String, message: Message) -> button::Button<'static, M
         text(button_text)
             .align_x(Horizontal::Center)
             .align_y(Vertical::Center)
-            .size(Pixels(FONT_SIZE)),
+            .size(Pixels(FONT_SIZE / 3.0)),
     )
-    .width(2 * BUTTON_HEIGHT)
-    .height(BUTTON_WIDTH)
+    .width(1.5 * BUTTON_HEIGHT)
+    .height(0.6 * BUTTON_WIDTH)
     .on_press(message)
 }
 
 impl Game {
     fn update(&mut self, message: Message) {
-        match message {
-            Message::Tick => self.time.tick(),
-            Message::Up => self.up(),
-            Message::Down => self.down(),
-            Message::Left => self.left(),
-            Message::Right => self.right(),
-            Message::Restart => self.restart(),
-            Message::Quit => std::process::exit(0),
-            _ => (),
+        match self.mode {
+            Mode::Normal => match message {
+                Message::Tick => self.time.tick(),
+                Message::Up => self.up(),
+                Message::Down => self.down(),
+                Message::Left => self.left(),
+                Message::Right => self.right(),
+                Message::Restart => self.restart(),
+                Message::ModeSwitch => self.switch_mode(),
+                Message::Quit => std::process::exit(0),
+                _ => (),
+            },
+            Mode::Reverse => match message {
+                Message::Tick => self.time.tick(),
+                Message::Upgrade(piece) => self.upgrade(&piece),
+                Message::Restart => self.restart(),
+                Message::ModeSwitch => self.switch_mode(),
+                Message::Quit => std::process::exit(0),
+                _ => (),
+            },
         }
     }
 
@@ -87,7 +119,7 @@ impl Game {
                 piece_button(self.board[0][3]),
             ]
             .padding(BUTTON_PADDING)
-            .spacing(2 * BUTTON_PADDING),
+            .spacing(2.0 * BUTTON_PADDING),
             column![
                 piece_button(self.board[1][0]),
                 piece_button(self.board[1][1]),
@@ -95,7 +127,7 @@ impl Game {
                 piece_button(self.board[1][3]),
             ]
             .padding(BUTTON_PADDING)
-            .spacing(2 * BUTTON_PADDING),
+            .spacing(2.0 * BUTTON_PADDING),
             column![
                 piece_button(self.board[2][0]),
                 piece_button(self.board[2][1]),
@@ -103,7 +135,7 @@ impl Game {
                 piece_button(self.board[2][3]),
             ]
             .padding(BUTTON_PADDING)
-            .spacing(2 * BUTTON_PADDING),
+            .spacing(2.0 * BUTTON_PADDING),
             column![
                 piece_button(self.board[3][0]),
                 piece_button(self.board[3][1]),
@@ -111,15 +143,19 @@ impl Game {
                 piece_button(self.board[3][3]),
             ]
             .padding(BUTTON_PADDING)
-            .spacing(2 * BUTTON_PADDING),
+            .spacing(2.0 * BUTTON_PADDING),
             column![
-                text("Time: ".to_string() + self.time.current().as_ref()).size(1.0 * FONT_SIZE),
-                text("Score: ".to_string() + self.score.to_string().as_ref()).size(1.0 * FONT_SIZE),
-                ui_button("restart".to_string(), Message::Restart),
+                text("Time: ".to_string() + self.time.current().as_ref()).size(0.7 * FONT_SIZE),
+                text("Score: ".to_string() + self.score.to_string().as_ref()).size(0.7 * FONT_SIZE),
+                ui_button("Restart".to_string(), Message::Restart),
+                ui_button(
+                    format!("Mode: {}", self.mode.to_string()),
+                    Message::ModeSwitch,
+                ),
                 ui_button("Quit".to_string(), Message::Quit),
             ]
             .padding(UI_PADDING)
-            .spacing(UI_PADDING),
+            .spacing(UI_PADDING)
         ];
 
         container(board)
@@ -156,16 +192,18 @@ fn input(key: k::Key, _module: k::Modifiers) -> Option<Message> {
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     Tick,
+    Upgrade(Piece),
     Up,
     Down,
     Left,
     Right,
     Restart,
     Quit,
+    ModeSwitch,
     None,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 struct Piece {
     scale: u8,
     x: u8,
@@ -180,11 +218,27 @@ struct Time {
 }
 
 #[derive(Debug, Clone, Copy)]
+enum Mode {
+    Normal,
+    Reverse,
+}
+
+#[derive(Debug, Clone, Copy)]
 struct Game {
+    mode: Mode,
     board: [[Piece; 4]; 4], // [x][y]
     score: u32,
     moves: u32,
     time: Time,
+}
+
+impl Mode {
+    fn to_string(&self) -> String {
+        match self {
+            Mode::Normal => "Normal".to_string(),
+            Mode::Reverse => "Reverse".to_string(),
+        }
+    }
 }
 
 impl Piece {
@@ -220,6 +274,7 @@ impl Time {
 impl std::default::Default for Game {
     fn default() -> Self {
         let mut game = Self {
+            mode: Mode::Normal,
             board: [[Piece {
                 scale: 0,
                 x: 0,
@@ -244,12 +299,71 @@ impl std::default::Default for Game {
     }
 }
 impl Game {
+    fn reverse_default() -> Self {
+        let mut game = Self {
+            mode: Mode::Reverse,
+            board: [[Piece {
+                scale: 0,
+                x: 0,
+                y: 0,
+            }; 4]; 4],
+            score: 0,
+            moves: 0,
+            time: Time {
+                seconds: 0,
+                minutes: 0,
+                hours: 0,
+            },
+        };
+        for c in 0..game.board.len() {
+            for p in 0..game.board[c].len() {
+                game.board[c][p].x = c as u8;
+                game.board[c][p].y = p as u8;
+            }
+        }
+        game.summon();
+        return game;
+    }
+    fn move_random(&mut self, num_tries: u8) {
+        if num_tries >= 100 {
+            return;
+        }
+        let origenal_board = self.board.clone();
+        let mut rng = thread_rng();
+        let direction: u8 = rng.gen_range(1..4);
+        match direction {
+            1 => self.auto_up(),
+            2 => self.auto_right(),
+            3 => self.auto_down(),
+            4 => self.auto_left(),
+            _ => panic!("The direction selected was not aplicable. "),
+        }
+        if self.board == origenal_board {
+            self.move_random(num_tries + 1);
+        }
+    }
+    fn switch_mode(&mut self) {
+        let new: Game;
+        match self.mode {
+            Mode::Normal => {
+                new = Self::reverse_default();
+            }
+            Mode::Reverse => {
+                new = Self::default();
+            }
+        }
+        *self = new;
+    }
     fn restart(&mut self) {
         let new = Game::default();
         self.board = new.board;
         self.score = new.score;
         self.moves = new.moves;
         self.time = new.time;
+    }
+    fn upgrade(&mut self, piece: &Piece) {
+        self.board[piece.x as usize][piece.y as usize].scale += 1;
+        self.move_random(0);
     }
     fn vert_flip(&mut self) {
         let mut new_board: [[Piece; 4]; 4] = Self::default().board;
@@ -388,6 +502,46 @@ impl Game {
         if has_shifted {
             self.summon();
         }
+        eprintln!("right")
+    }
+    fn auto_up(&mut self) {
+        for x in 0..self.board.len() {
+            if self.compressible(x) {
+                self.compress(x);
+            }
+        }
+        eprintln!("up")
+    }
+    fn auto_down(&mut self) {
+        self.vert_flip();
+        for x in 0..self.board.len() {
+            if self.compressible(x) {
+                self.compress(x);
+            }
+        }
+        self.vert_flip();
+        eprintln!("down")
+    }
+    fn auto_left(&mut self) {
+        self.diag_flip();
+        for x in 0..self.board.len() {
+            if self.compressible(x) {
+                self.compress(x);
+            }
+        }
+        self.diag_flip();
+        eprintln!("left")
+    }
+    fn auto_right(&mut self) {
+        self.diag_flip();
+        self.vert_flip();
+        for x in 0..self.board.len() {
+            if self.compressible(x) {
+                self.compress(x);
+            }
+        }
+        self.vert_flip();
+        self.diag_flip();
         eprintln!("right")
     }
 }
