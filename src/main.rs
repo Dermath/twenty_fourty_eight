@@ -1,25 +1,27 @@
-use std::default;
-
 use iced::alignment::Horizontal;
 use iced::alignment::Vertical;
-use iced::executor;
 use iced::keyboard as k;
-use iced::theme::{Custom, Palette};
-use iced::widget::{button, column, container, row, text::Text};
-use iced::Color;
-use iced::Pixels;
-use iced::{Application, Command, Element, Length, Settings, Theme};
+use iced::time;
+use iced::widget::{button, column, container, row, text};
+use iced::{Element, Length, Pixels, Theme};
 use rand::thread_rng;
 use rand::Rng;
 
 const FONT_SIZE: f32 = 70.0;
 
-const BUTTONWIDTH: u16 = 200;
-const BUTTONHEIGHT: u16 = 200;
-const BUTTONPADDING: u16 = 5;
+const BUTTON_WIDTH: u16 = 200;
+const BUTTON_HEIGHT: u16 = 200;
+const BUTTON_PADDING: u16 = 5;
+const UI_PADDING: u16 = 20;
+
+const WIN_SCALE: f32 = 11.0;
 
 fn main() -> iced::Result {
-    Game::run(Settings::default())
+    iced::application("2048", Game::update, Game::view)
+        .subscription(Game::subscription)
+        .theme(|_| Theme::SolarizedDark)
+        .antialiasing(true)
+        .run()
 }
 
 fn _interesting(game: &Game) {
@@ -33,58 +35,47 @@ fn _interesting(game: &Game) {
 }
 
 fn piece_button(piece: Piece) -> button::Button<'static, Message> {
-    button(
-        Text::new(piece.as_string())
-            .horizontal_alignment(Horizontal::Center)
-            .vertical_alignment(Vertical::Center)
-            .size(Pixels(FONT_SIZE)),
+    let mut r = piece.scale as f32 / WIN_SCALE;
+    if r > 1.0 {
+        r = 1.0;
+    }
+    let b = 1.0 - r;
+    return button(
+        text(piece.as_string())
+            .align_x(Horizontal::Center)
+            .align_y(Vertical::Center)
+            .size(Pixels(FONT_SIZE))
+            .color([r, 0.0, b]),
     )
-    .width(BUTTONHEIGHT)
-    .height(BUTTONWIDTH)
-    .padding(BUTTONPADDING)
-    .on_press(Message::None)
+    .width(BUTTON_HEIGHT)
+    .height(BUTTON_WIDTH)
+    .on_press(Message::None);
 }
 
-impl Application for Game {
-    type Executor = executor::Default;
-    type Theme = Theme;
-    type Message = Message;
-    type Flags = ();
+fn ui_button(button_text: String, message: Message) -> button::Button<'static, Message> {
+    button(
+        text(button_text)
+            .align_x(Horizontal::Center)
+            .align_y(Vertical::Center)
+            .size(Pixels(FONT_SIZE)),
+    )
+    .width(2 * BUTTON_HEIGHT)
+    .height(BUTTON_WIDTH)
+    .on_press(message)
+}
 
-    fn new(_flags: ()) -> (Self, Command<Message>) {
-        let mut game = Self::default();
-        game.summon();
-        (game, Command::none())
-    }
-
-    fn theme(&self) -> Self::Theme {
-        //        Theme::custom(Custom::new(
-        //          "my_theme".to_string(),
-        //          Palette {
-        //              background: BLACK,
-        //              text: WHITE,
-        //              primary: RED,
-        //              success: RED,
-        //              danger: RED,
-        //          },
-        //      ))
-        Theme::Dark
-    }
-
-    fn title(&self) -> String {
-        String::from("2048")
-    }
-
-    fn update(&mut self, message: Message) -> Command<Message> {
+impl Game {
+    fn update(&mut self, message: Message) {
         match message {
+            Message::Tick => self.time.tick(),
             Message::Up => self.up(),
             Message::Down => self.down(),
             Message::Left => self.left(),
             Message::Right => self.right(),
+            Message::Restart => self.restart(),
+            Message::Quit => std::process::exit(0),
             _ => (),
         }
-
-        Command::none()
     }
 
     fn view(&self) -> Element<Message> {
@@ -94,25 +85,41 @@ impl Application for Game {
                 piece_button(self.board[0][1]),
                 piece_button(self.board[0][2]),
                 piece_button(self.board[0][3]),
-            ],
+            ]
+            .padding(BUTTON_PADDING)
+            .spacing(2 * BUTTON_PADDING),
             column![
                 piece_button(self.board[1][0]),
                 piece_button(self.board[1][1]),
                 piece_button(self.board[1][2]),
                 piece_button(self.board[1][3]),
-            ],
+            ]
+            .padding(BUTTON_PADDING)
+            .spacing(2 * BUTTON_PADDING),
             column![
                 piece_button(self.board[2][0]),
                 piece_button(self.board[2][1]),
                 piece_button(self.board[2][2]),
                 piece_button(self.board[2][3]),
-            ],
+            ]
+            .padding(BUTTON_PADDING)
+            .spacing(2 * BUTTON_PADDING),
             column![
                 piece_button(self.board[3][0]),
                 piece_button(self.board[3][1]),
                 piece_button(self.board[3][2]),
                 piece_button(self.board[3][3]),
             ]
+            .padding(BUTTON_PADDING)
+            .spacing(2 * BUTTON_PADDING),
+            column![
+                text("Time: ".to_string() + self.time.current().as_ref()).size(1.0 * FONT_SIZE),
+                text("Score: ".to_string() + self.score.to_string().as_ref()).size(1.0 * FONT_SIZE),
+                ui_button("restart".to_string(), Message::Restart),
+                ui_button("Quit".to_string(), Message::Quit),
+            ]
+            .padding(UI_PADDING)
+            .spacing(UI_PADDING),
         ];
 
         container(board)
@@ -122,8 +129,11 @@ impl Application for Game {
             .into()
     }
 
-    fn subscription(&self) -> iced::Subscription<Self::Message> {
-        return k::on_key_press(input).into();
+    fn subscription(&self) -> iced::Subscription<Message> {
+        iced::Subscription::batch(vec![
+            iced::time::every(time::Duration::from_millis(1000)).map(|_| Message::Tick),
+            k::on_key_press(input).into(),
+        ])
     }
 }
 
@@ -145,14 +155,17 @@ fn input(key: k::Key, _module: k::Modifiers) -> Option<Message> {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
+    Tick,
     Up,
     Down,
     Left,
     Right,
+    Restart,
+    Quit,
     None,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 struct Piece {
     scale: u8,
     x: u8,
@@ -197,9 +210,11 @@ impl Time {
             self.hours += 1;
         }
     }
+    fn current(&self) -> String {
+        return format!("{}:{}:{}", self.hours, self.minutes, self.seconds);
+    }
 }
-
-impl Game {
+impl std::default::Default for Game {
     fn default() -> Self {
         let mut game = Self {
             board: [[Piece {
@@ -221,7 +236,17 @@ impl Game {
                 game.board[c][p].y = p as u8;
             }
         }
+        game.summon();
         return game;
+    }
+}
+impl Game {
+    fn restart(&mut self) {
+        let new = Game::default();
+        self.board = new.board;
+        self.score = new.score;
+        self.moves = new.moves;
+        self.time = new.time;
     }
     fn vert_flip(&mut self) {
         let mut new_board: [[Piece; 4]; 4] = Self::default().board;
@@ -284,13 +309,14 @@ impl Game {
                     y: y as u8,
                 };
             } else if y > 0 && self.board[x][y - 1].scale == self.board[x][y].scale {
+                self.score += 2 * self.board[x][y].as_number();
+
                 self.board[x][y - 1].scale += 1;
                 self.board[x][y] = Piece {
                     scale: 0,
                     x: x as u8,
                     y: y as u8,
                 };
-                self.score += self.board[x][y].as_number();
             }
         }
         if self.compressible(x) {
