@@ -171,17 +171,25 @@ impl Game {
 }
 
 fn input(key: k::Key, _module: k::Modifiers) -> Option<Message> {
-    let char = match key {
-        // k::Key::Character(inner) => inner,
-        k::Key::Named(inner) => inner,
-        _ => return None,
-    };
-
-    return Some(match char {
-        k::key::Named::ArrowUp => Message::Up,
-        k::key::Named::ArrowDown => Message::Down,
-        k::key::Named::ArrowLeft => Message::Left,
-        k::key::Named::ArrowRight => Message::Right,
+    return Some(match key.as_ref() {
+        k::Key::Named(inner) => match inner {
+            k::key::Named::ArrowLeft => Message::Left,
+            k::key::Named::ArrowUp => Message::Up,
+            k::key::Named::ArrowDown => Message::Down,
+            k::key::Named::ArrowRight => Message::Right,
+            _ => Message::None,
+        },
+        k::Key::Character(inner) => match inner {
+            "h" => Message::Left,
+            "a" => Message::Left,
+            "k" => Message::Up,
+            "w" => Message::Up,
+            "j" => Message::Down,
+            "s" => Message::Down,
+            "l" => Message::Right,
+            "d" => Message::Right,
+            _ => Message::None,
+        },
         _ => Message::None,
     });
 }
