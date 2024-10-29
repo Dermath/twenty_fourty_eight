@@ -1,9 +1,6 @@
-use iced::alignment::Horizontal;
-use iced::alignment::Vertical;
 use iced::keyboard as k;
-use iced::time;
 use iced::widget::{button, column, container, row, text};
-use iced::{Element, Length, Pixels, Theme};
+use iced::{time, Element, Length, Pixels, Theme};
 use rand::thread_rng;
 use rand::Rng;
 
@@ -11,8 +8,6 @@ const ICON: &[u8] = include_bytes!("2048.png");
 
 const FONT_SIZE: f32 = 70.0;
 
-const BUTTON_WIDTH: f32 = 200.0;
-const BUTTON_HEIGHT: f32 = 200.0;
 const BUTTON_PADDING: f32 = 5.0;
 const UI_PADDING: u16 = 20;
 
@@ -60,25 +55,25 @@ fn piece_button(piece: Piece) -> button::Button<'static, Message> {
     };
     return button(
         text(piece.as_string())
-            .align_x(Horizontal::Center)
-            .align_y(Vertical::Center)
+            .center()
+            .width(Length::Fill)
             .size(Pixels(FONT_SIZE))
             .color([r, 0.0, b]),
     )
-    .width(BUTTON_HEIGHT)
-    .height(BUTTON_WIDTH)
+    .width(Length::Fill)
+    .height(Length::Fill)
     .on_press(press_action);
 }
 
 fn ui_button(button_text: String, message: Message) -> button::Button<'static, Message> {
     button(
         text(button_text)
-            .align_x(Horizontal::Center)
-            .align_y(Vertical::Center)
-            .size(Pixels(FONT_SIZE / 3.0)),
+            .center()
+            .width(iced::Length::Fill)
+            .size(Pixels(FONT_SIZE / 2.0)),
     )
-    .width(1.5 * BUTTON_HEIGHT)
-    .height(0.6 * BUTTON_WIDTH)
+    .width(Length::Fill)
+    .height(Length::Fill)
     .on_press(message)
 }
 
@@ -115,6 +110,7 @@ impl Game {
                 piece_button(self.board[0][2]),
                 piece_button(self.board[0][3]),
             ]
+            .width(Length::FillPortion(1))
             .padding(BUTTON_PADDING)
             .spacing(2.0 * BUTTON_PADDING),
             column![
@@ -123,6 +119,7 @@ impl Game {
                 piece_button(self.board[1][2]),
                 piece_button(self.board[1][3]),
             ]
+            .width(Length::FillPortion(1))
             .padding(BUTTON_PADDING)
             .spacing(2.0 * BUTTON_PADDING),
             column![
@@ -131,6 +128,7 @@ impl Game {
                 piece_button(self.board[2][2]),
                 piece_button(self.board[2][3]),
             ]
+            .width(Length::FillPortion(1))
             .padding(BUTTON_PADDING)
             .spacing(2.0 * BUTTON_PADDING),
             column![
@@ -139,6 +137,7 @@ impl Game {
                 piece_button(self.board[3][2]),
                 piece_button(self.board[3][3]),
             ]
+            .width(Length::FillPortion(1))
             .padding(BUTTON_PADDING)
             .spacing(2.0 * BUTTON_PADDING),
             column![
@@ -151,6 +150,7 @@ impl Game {
                 ),
                 ui_button("Quit".to_string(), Message::Quit),
             ]
+            .width(Length::FillPortion(3))
             .padding(UI_PADDING)
             .spacing(UI_PADDING)
         ];
