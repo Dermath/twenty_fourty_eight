@@ -327,7 +327,7 @@ impl Game {
         }
         let origenal_board = self.board.clone();
         let mut rng = thread_rng();
-        let direction: u8 = rng.gen_range(1..4);
+        let direction: u8 = rng.gen_range(1..=4);
         match direction {
             1 => self.auto_up(),
             2 => self.auto_right(),
