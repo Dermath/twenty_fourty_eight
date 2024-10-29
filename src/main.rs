@@ -1,14 +1,13 @@
-use core::num;
-
 use iced::alignment::Horizontal;
 use iced::alignment::Vertical;
 use iced::keyboard as k;
 use iced::time;
-use iced::widget::pane_grid::Direction;
 use iced::widget::{button, column, container, row, text};
 use iced::{Element, Length, Pixels, Theme};
 use rand::thread_rng;
 use rand::Rng;
+
+const ICON: &[u8] = include_bytes!("2048.png");
 
 const FONT_SIZE: f32 = 70.0;
 
@@ -20,9 +19,7 @@ const UI_PADDING: u16 = 20;
 const WIN_SCALE: f32 = 11.0;
 
 fn main() -> iced::Result {
-    let icon = match iced::window::icon::from_file(
-        "/home/dermot/Desktop/Programing/Rust/twenty_fourty_eight/src/2048.png",
-    ) {
+    let icon = match iced::window::icon::from_file_data(ICON, None) {
         Ok(inner) => inner,
         Err(inner) => panic!(
             "the window icon appears to be missing with error code: {}",
@@ -204,7 +201,7 @@ pub enum Message {
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
-struct Piece {
+pub struct Piece {
     scale: u8,
     x: u8,
     y: u8,
@@ -452,7 +449,7 @@ impl Game {
         if has_shifted {
             self.summon();
         }
-        eprintln!("up")
+        // eprintln!("up")
     }
     fn down(&mut self) {
         self.vert_flip();
@@ -468,7 +465,7 @@ impl Game {
             self.summon();
         }
 
-        eprintln!("down")
+        // eprintln!("down")
     }
     fn left(&mut self) {
         self.diag_flip();
@@ -484,7 +481,7 @@ impl Game {
         if has_shifted {
             self.summon();
         }
-        eprintln!("left")
+        // eprintln!("left")
     }
     fn right(&mut self) {
         self.diag_flip();
@@ -502,7 +499,7 @@ impl Game {
         if has_shifted {
             self.summon();
         }
-        eprintln!("right")
+        // eprintln!("right")
     }
     fn auto_up(&mut self) {
         for x in 0..self.board.len() {
@@ -510,7 +507,7 @@ impl Game {
                 self.compress(x);
             }
         }
-        eprintln!("up")
+        // eprintln!("up")
     }
     fn auto_down(&mut self) {
         self.vert_flip();
@@ -520,7 +517,7 @@ impl Game {
             }
         }
         self.vert_flip();
-        eprintln!("down")
+        // eprintln!("down")
     }
     fn auto_left(&mut self) {
         self.diag_flip();
@@ -530,7 +527,7 @@ impl Game {
             }
         }
         self.diag_flip();
-        eprintln!("left")
+        // eprintln!("left")
     }
     fn auto_right(&mut self) {
         self.diag_flip();
@@ -542,6 +539,6 @@ impl Game {
         }
         self.vert_flip();
         self.diag_flip();
-        eprintln!("right")
+        // eprintln!("right")
     }
 }
