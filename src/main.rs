@@ -329,10 +329,7 @@ impl Game {
         game.summon();
         return game;
     }
-    fn move_random(&mut self, num_tries: u8) {
-        if num_tries >= 100 {
-            return;
-        }
+    fn move_random(&mut self) {
         let origenal_board = self.board.clone();
         let mut rng = thread_rng();
         let direction: u8 = rng.gen_range(1..=4);
@@ -343,8 +340,15 @@ impl Game {
             4 => self.auto_left(),
             _ => panic!("The direction selected was not aplicable. "),
         }
-        if self.board == origenal_board {
-            self.move_random(num_tries + 1);
+
+        let mut compressible = false;
+        for x in 0..self.board.len() {
+            if self.compressible(x) {
+                compressible = true;
+            }
+        }
+        if self.board == origenal_board && compressible {
+            self.move_random();
         }
     }
     fn switch_mode(&mut self) {
@@ -368,7 +372,7 @@ impl Game {
     }
     fn upgrade(&mut self, piece: &Piece) {
         self.board[piece.x as usize][piece.y as usize].scale += 1;
-        self.move_random(0);
+        self.move_random();
     }
     fn vert_flip(&mut self) {
         let mut new_board: [[Piece; 4]; 4] = Self::default().board;
