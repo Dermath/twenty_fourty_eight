@@ -347,6 +347,13 @@ impl Game {
                 compressible = true;
             }
         }
+        self.diag_flip();
+        for y in 0..self.board.len() {
+            if self.compressible(y) {
+                compressible = true;
+            }
+        }
+        self.diag_flip();
         if self.board == origenal_board && compressible {
             self.move_random();
         }
